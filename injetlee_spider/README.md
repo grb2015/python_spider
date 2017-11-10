@@ -1,3 +1,7 @@
+### rbguo fork from https://github.com/injetlee/
+### 以下是原readme
+
+
 ### 这是我日常遇到的一些小问题的解决办法，全部是基于Python3
 
 1.[获取当前CPU状态，存储到Influxdb](https://github.com/injetlee/demo/blob/master/CpuToInfluxdb.py)
@@ -18,3 +22,4 @@
 8.[读写excel](https://github.com/injetlee/demo/blob/master/readExcel.py)
 
 9.[下载必应首页图片,只下载当天的，一张。](https://github.com/injetlee/Python/blob/master/biyingSpider.py)
+
