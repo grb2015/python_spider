@@ -1,2 +1,1 @@
-# python_spider
-python spider 
+download bing.com  index image to set as desktop backgroud .
