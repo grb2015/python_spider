@@ -1,4 +1,8 @@
 import csv
+'''
+	演示如何用python创建csv文件并写入
+	http://blog.csdn.net/waple_0820/article/details/70049953
+'''
 
 #python2可以用file替代open
 with open("test.csv","w") as csvfile: 
