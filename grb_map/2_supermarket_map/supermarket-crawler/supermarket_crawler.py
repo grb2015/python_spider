@@ -11,15 +11,23 @@ renbin.guo added:
                           http://api.map.baidu.com/place/v2/search?q=%E9%BA%A6%E5%BE%B7%E9%BE%99&region=%E4%B8%8A%E6%B5%B7&page_size=20&page_num=0&output=json&ak=QPBpKbOkCqkkToYT5VaFixoz3hkykVBi
                           得到的确实只有9条。
                           而用浏览器搜索会得到11条,其中有条是冒牌的,另外有两条地点在一起.
-    TODE : 
+    TODO : 
         1.将数据导入到excel中进行分析，存为csv用excel打开发现所有内容都在一个单元格
         2.麦德龙(常熟商场店) 31.684721 120.789353 经济技术开发区通港路99号  这个就不知道是哪里了，需要对地址进行结构化 /省/市/区/路/号
         3.爬取各家超市官网，统计数据，与地图的数据做对比。
+    history ；
+        renbin.guo 2017-11-13 fix TODO1   use csv to write
+
+
+感谢：
+http://blog.csdn.net/swjtuzbko/article/details/52709501  excel打开 uft-8的文件乱码--->使用notepad++ 转为ANSI编码
 """
 
 import codecs
 import requests
 import time
+
+import csv
 
 def supermarket_crawler():
     """Supermarket Crawler
@@ -36,7 +44,9 @@ def supermarket_crawler():
     ak = 'QPBpKbOkCqkkToYT5VaFixoz3hkykVBi' 
 
     # 要实现写入时编码为UTF-8，应使用codecs模块的open
-    with codecs.open('supermarkets.txt', 'w', encoding='utf-8') as market_file:
+    with codecs.open('supermarkets.csv', 'w', encoding='utf-8') as market_file:
+        writer = csv.writer(market_file)
+        writer.writerow(["商场名","经度","纬度","地址"])
 
         for city in cities:
             for supermarket_name in supermarkets:
@@ -68,11 +78,14 @@ def supermarket_crawler():
                                 supermarket = supermarket_json['results'][supermarket_num]
                                 print(city, supermarket_name)
                                 ## windows换行需要\r\n  linux \n
-                                write_buf = '{0}   {1}   {2} {3}\r\n'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address'])
+                                write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address'])
                                 #print('write_buf = ',write_buf)
-                               #print('type write_buf = ',type(write_buf))
+                                #print('type write_buf = ',type(write_buf))
+                                list_write_buf = write_buf.split(' ')
+                                print('list_write_buf = ',list_write_buf)
                                 #market_file.write('{0}   {1}   {2} {3}\r\n'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address']))
-                                market_file.write(write_buf)
+                                
+                                writer.writerow(list_write_buf)
                             except Exception as crawl_error:
                                 print("########### except 1######################")
                                 pass
