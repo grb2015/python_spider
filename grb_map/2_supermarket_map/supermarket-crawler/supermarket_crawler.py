@@ -17,6 +17,7 @@ renbin.guo added:
         3.爬取各家超市官网，统计数据，与地图的数据做对比。
     history ；
         renbin.guo 2017-11-13 fix TODO1   use csv to write
+        renbin.guo 2017-11-13 fix TODO2   格式化地址: 家乐福    31.241658   121.424219  白玉路101号 -->家乐福,31.241658,121.424219,上海市普陀区白玉路101号
 
 
 感谢：
@@ -26,8 +27,34 @@ http://blog.csdn.net/swjtuzbko/article/details/52709501  excel打开 uft-8的文
 import codecs
 import requests
 import time
+import urllib.request
 
 import csv
+
+'''
+    通过经纬度得到格式化的地址
+'''
+def get_format_addr_from_lng_lat(lat,lng,ak):
+    try:
+        url2 = "http://api.map.baidu.com/geocoder/v2/?location=%s,%s&output=json&pois=1&ak=%s"%(lat ,lng,ak)
+        print('#### url2 = ',url2)
+        format_json = requests.get(url2).json() 
+       # req2 = urllib.request.urlopen(url2)#JSON格式的返回数据
+
+        #respan_json2 = req2.read().decode("utf-8") #将其他编码的字符串解码成unicode
+       # respan_python2 = json.loads(respan_json2)  ####  将json格式转为python数据结构
+        #print('respan_python2 = ',respan_python2)
+        #print('######　format_json_url2 = ',format_json)
+        format_addr = format_json['result']['formatted_address']
+        print('### format_addr_url2 = ',format_addr)
+       
+        return format_addr
+    except Exception as crawl_error:
+        print("########### except 3######################")
+        pass
+
+
+
 
 def supermarket_crawler():
     """Supermarket Crawler
@@ -77,8 +104,12 @@ def supermarket_crawler():
                             try:
                                 supermarket = supermarket_json['results'][supermarket_num]
                                 print(city, supermarket_name)
+                                #time.sleep(1) 
+                                format_addr = get_format_addr_from_lng_lat(supermarket['location']['lat'],supermarket['location']['lng'],ak)
+                                print("_________format add = ",format_addr)
                                 ## windows换行需要\r\n  linux \n
-                                write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address'])
+                                #write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address'])
+                                write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'],format_addr)
                                 #print('write_buf = ',write_buf)
                                 #print('type write_buf = ',type(write_buf))
                                 list_write_buf = write_buf.split(' ')
