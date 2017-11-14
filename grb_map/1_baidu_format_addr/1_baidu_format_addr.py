@@ -33,23 +33,37 @@ location = respan_python['results'][0]['location'] #经纬度坐标
 #print ('### address and location = ',address,location)
 lat = str(location['lat'])#纬度坐标 
 lng = str(location['lng'])#经度坐标 
-#url2 = "http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location='+lat+','+lng+'&output=xml&pois=1&ak=%s"%(ak)  ## 也可以用xml
-url2 = "http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=%s,%s&output=json&pois=1&ak=%s"%(lat , lng,ak)
+
+#url2 = "http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location='+lat+','+lng+'&output=xml&pois=1&ak=%s"%(ak)  
+
+'''
+url2 = "http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=%s,%s&output=json&pois=1&ak=%s"%(lat , lng,ak) ## 这里搞个callback=renderReverse干啥，不需要
 print('\n### url2 = \n',url2)
 
 
 
 respan_str = urllib.request.urlopen(url2) #JSON格式的返回数据 这次返回的不是json，而是一个字符串了
-#print('#### req = ',req)
 respan_str = respan_str.read().decode("utf-8") #将其他编码的字符串解码成unicode
 print('### respan_str = ',respan_str)  
 
 
 pattern = re.compile(r'"formatted_address":"(.+?)"',re.S)
 format_addr  = re.findall(pattern , str(respan_str))
-#print('### form_addr = ',form_addr)
-#print(type(form_addr))
 print('format_addr = ',format_addr[0])
+'''
+url2 = "http://api.map.baidu.com/geocoder/v2/?location=%s,%s&output=json&pois=1&ak=%s"%(lat , lng,ak)
+print('#### url2 = ',url2)
+req2 = urllib.request.urlopen(url2)#JSON格式的返回数据
+#print('### req2 = ',req2)
+#req2_read = req2.read()
+#print('### req2_read = ',req2_read)
+respan_json2 = req2.read().decode("utf-8") #将其他编码的字符串解码成unicode
+respan_python2 = json.loads(respan_json2)  ####  将json格式转为python数据结构
+print('respan_python2 = ',respan_python2)
+format_addr = respan_python2['result']['formatted_address']
+print('### \n\nform_addr = ',format_addr)
+#print(type(form_addr))
+
 
 
 ### ## 也可以用xml
