@@ -157,19 +157,29 @@ def get_rt_mark():
   print('respense.getcode() = %s\n\n'%response.getcode())
           
   #data = data.decode('utf-8',ignore)     ### 同样，这里因为print(str)参数为str 所以需要unicode
-  data= data.decode('gbk')
-  
-  with codecs.open('supermarkets_offical.csv', 'a', encoding='utf-8') as market_file:  ### 追加写
-            writer = csv.writer(market_file)
-            pattern = re.compile(r'门店地址：(.+?)</p>',re.S)
-            for info_tuple  in re.findall(pattern , data):  
-              #writer.writerow(info_list)
-              #print('info_tuple',info_tuple)
-              info_list = list(info_tuple)
-              #print('info_list',info_list)
+  #data= data.decode('gbk')
+  data = data.decode('utf-8') 
+
+  pattern = re.compile(r'st_link" href="(.+?)"',re.S)
+  for store_link  in re.findall(pattern , data):  
+    #print(store_link)
+ 
+    url = store_link
+    request = urllib.request.Request(url)
+    response = urllib.request.urlopen(request)
+    data = response.read()  
+    data = data.decode('utf-8') 
+    with codecs.open('supermarkets_offical.csv', 'a', encoding='utf-8') as market_file:  ### 追加写
+              writer = csv.writer(market_file)
+              pattern = re.compile(r'store_detail_head">.+?<p>(.+?)</p>.+?门店地址：(.+?)</p>',re.S)
+              for info_tuple  in re.findall(pattern , data):             
+                info_list = list(info_tuple)
+                info_list.insert(0,'大润发')
+                writer.writerow(info_list)
+                print(info_list)
 
 if(__name__ == '__main__'):
     #get_metro()
     #get_carrefour()
-    get_walmart()
-    #get_rt_mark()
+    #get_walmart()
+    get_rt_mark()
