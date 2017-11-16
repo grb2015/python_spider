@@ -34,6 +34,9 @@ import urllib.request
 import csv
 import datetime
 
+from multiprocessing import Pool
+import os, time, random
+
 
 '''
     定义log格式
@@ -50,7 +53,8 @@ def current_time():
 def get_format_addr_from_lng_lat(lat,lng,ak):
     try:
         url2 = "http://api.map.baidu.com/geocoder/v2/?location=%s,%s&output=json&pois=1&ak=%s"%(lat ,lng,ak)
-        print('#### url2 = ',url2,file=log_file)
+        #print('#### url2 = ',url2,file=log_file)
+        print('#### url2 = ',url2)
         format_json = requests.get(url2).json() 
        # req2 = urllib.request.urlopen(url2)#JSON格式的返回数据
 
@@ -59,23 +63,25 @@ def get_format_addr_from_lng_lat(lat,lng,ak):
         #print('respan_python2 = ',respan_python2,file=log_file)
         #print('######　format_json_url2 = ',format_json,file=log_file)
         format_addr = format_json['result']['formatted_address']
-        print('### format_addr_url2 = ',format_addr,file=log_file)
+        #print('### format_addr_url2 = ',format_addr,file=log_file)
+        print('### format_addr_url2 = ',format_addr)
        
         return format_addr
     except Exception as crawl_error:
-        print("########### except 3 ######################",file=log_file)
+        #print("########### except 3 ######################",file=log_file)
         print("########### except 3 ######################")
         pass
 
 
 
 
-def supermarket_crawler():
+#def supermarket_crawler(cities,supermarkets,csvfilename,log_file):
+def supermarket_crawler(cities,supermarkets,csvfilename):
     """Supermarket Crawler
     """
 
-    cities = ['上海', '南京', '无锡', '常州', '苏州', '南通', '盐城', '扬州', '镇江', '泰州', '杭州', '宁波', '嘉兴', '湖州', '绍兴', '金华', '舟山', '台州', '合肥', '芜湖', '马鞍山', '铜陵', '安庆', '滁州', '池州', '宣城']
-    supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
+    #cities = ['上海', '南京', '无锡', '常州', '苏州', '南通', '盐城', '扬州', '镇江', '泰州', '杭州', '宁波', '嘉兴', '湖州', '绍兴', '金华', '舟山', '台州', '合肥', '芜湖', '马鞍山', '铜陵', '安庆', '滁州', '池州', '宣城']
+    #supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
     #cities = ['上海', '南京', '无锡', '常州', '苏州']
     #cities = ['上海']
     #supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
@@ -83,33 +89,41 @@ def supermarket_crawler():
     # test_supermarkets = ['苏果', '家乐福']
     page_size = 20
     ak = 'QPBpKbOkCqkkToYT5VaFixoz3hkykVBi' 
+    print('beging ...')
 
     # 要实现写入时编码为UTF-8，应使用codecs模块的open
-    with codecs.open('supermarkets.csv', 'w', encoding='utf-8') as market_file:
+    with codecs.open(csvfilename, 'w', encoding='utf-8') as market_file:
+        print('open  ...')
         writer = csv.writer(market_file)
         writer.writerow(["商场名","经度","纬度","地址"])
 
         for city in cities:
             for supermarket_name in supermarkets:
+                print(city, supermarket_name)
                 time.sleep(0.2)  ### renbin.guo added 必须加这个，不然我这里会发现supermarket_json = requests.get(url_total).json() 会exception
                 url_total = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&output=json&ak={3}'.format(supermarket_name, city, page_size,ak)
+                #print('### url_total = ',url_total)
                 try:
-                    
-                    print('### url_total = ',url_total,file=log_file)
+                    #print('### url_total222 = ',url_total)
+                    #print('### url_total = ',url_total,file=log_file)
+                    #print('### url_total= ',url_total)
                     supermarket_json = requests.get(url_total).json()   ### 我感觉requests直接把json转为了python数据结构
+                    #print(supermarket_json)
                     supermarket_num =  supermarket_json['total']
                     #print('##### type  supermarket_json = ',type(supermarket_json,file=log_file))  ##＃这里直接得到dict 
-                    print('##### supermarket_json = ',supermarket_json,file=log_file)
-                    print('#### supermarket_total = ',supermarket_num,file=log_file)
+                    #print('##### supermarket_json = ',supermarket_json,file=log_file)
+                    #print('#### supermarket_total = ',supermarket_num,file=log_file)
+                    print('#### supermarket_total = ',supermarket_num)
 
                     page_total = supermarket_num // 20 + 1
-                    print('#### page_total = ',page_total,file=log_file)
-                    
+                    #print('#### page_total = ',page_total,file=log_file)
+                    print('#### page_total = ',page_total)
                     for page_num in range(page_total):
                         url = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&page_num={3}&output=json&ak={4}'.format(supermarket_name, city, page_size, page_num,ak)
-                        print('### url = ',url,file=log_file)
+                        #print('### url = ',url,file=log_file)
+                        print('### url-1 = ',url)
                         supermarket_json = requests.get(url).json()
-                        print('##### supermarket_json2 = ',supermarket_json,file=log_file)
+                        #print('##### supermarket_json2 = ',supermarket_json,file=log_file)
 
                         rest_size = page_size  ##　还剩余多少记录，默认为20
                         if(page_num == page_total - 1):
@@ -117,35 +131,112 @@ def supermarket_crawler():
                         for supermarket_num in range(rest_size):
                             try:
                                 supermarket = supermarket_json['results'][supermarket_num]
-                                print(city, supermarket_name,file=log_file)
+                                #print(city, supermarket_name,file=log_file)
                                 #print(city, supermarket_name)
                                 #time.sleep(1) 
-                                time.sleep(0.3)
+                                time.sleep(0.2)
                                 format_addr = get_format_addr_from_lng_lat(supermarket['location']['lat'],supermarket['location']['lng'],ak)
-                                print("_________format add = ",format_addr,file=log_file)
+                                #print("_________format add = ",format_addr,file=log_file)
                                 ## windows换行需要\r\n  linux \n
                                 #write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address'])
                                 write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'],format_addr)
                                 #print('write_buf = ',write_buf,file=log_file)
                                 #print('type write_buf = ',type(write_buf,file=log_file))
                                 list_write_buf = write_buf.split(' ')
-                                print(current_time(),list_write_buf,file=log_file)  ### 加入时间
+                                #print(current_time(),list_write_buf,file=log_file)  ### 加入时间
                                 print(current_time(),list_write_buf)
                                 #print('list_write_buf = ',list_write_buf)
                                 #market_file.write('{0}   {1}   {2} {3}\r\n'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address']))
                                 
                                 writer.writerow(list_write_buf)
                             except Exception as crawl_error:
-                                print("########### except 1 ######################",file=log_file)
+                                #print("########### except 1 ######################",file=log_file)
                                 print("########### except 1 ######################")
                                 pass
 
                 except Exception as crawl_error:
-                    print("########### except 2 ######################",file=log_file)
+                    #print("########### except 2 ######################",file=log_file)
                     print("########### except 2 ######################")
                     pass
 
+'''
 if(__name__ == '__main__'):
     log_file = open("./log.txt", 'a+') 
-    supermarket_crawler()
+    supermarket_crawler()'''
+
+
+
+
+def long_time_task(name):
+    print('Run task %s (%s)...' % (name, os.getpid()))
+    start = time.time()
+    time.sleep(random.random() * 3)
+    end = time.time()
+    print('Task %s runs %0.2f seconds.' % (name, (end - start)))
+
+if __name__=='__main__':
+    #log_file = open("./log.txt", 'a+') 
+    cities = ['上海', '南京', '无锡', '常州', '苏州', '南通', '盐城', '扬州', '镇江', '泰州', '杭州', '宁波', '嘉兴', '湖州', '绍兴', '金华', '舟山', '台州', '合肥', '芜湖', '马鞍山', '铜陵', '安庆', '滁州', '池州', '宣城']
+    #supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
+    supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
+    #cities = ['上海', '南京', '无锡', '常州', '苏州']
+    half = len(cities)//2
+    quat = len(cities)//4
+    print('Parent process %s.' % os.getpid())
+    csvfile=[]
+    log_file_name=[]
+    for i in range(5):
+        csvfile.append('superlist'+str(i)+'.csv')
+        log_file_name.append('log'+str(i)+'.txt')
+    print(csvfile)
+    print(log_file_name)
+    #print(cities[0:quat])
+    #print(cities[quat:half])
+    #print(cities[-half:-quat])
+    #print(cities[-quat:])
+
+    for i  in range(4):
+        print(csvfile[i])
+        print(log_file_name[i])
+    fd1= open("log0.txt", 'a+')  
+    fd2= open("log1.txt", 'a+')  
+    fd3= open("log2.txt", 'a+')  
+    fd4= open("log3.txt", 'a+')  
+    fd1.write('dddddd')
+    fd2.write('dddddd')
+    fd3.write('dddddd')
+    fd4.write('dddddd')
+
+    #fd2= open(log_file_name[1], 'a+')  
+    #fd3= open(log_file_name[2], 'a+')  
+    #fd4= open(log_file_name[3], 'a+')  
+        
+    p = Pool(4)
+    '''
+    p.apply_async(supermarket_crawler, args=(cities[0:quat],supermarkets,csvfile[0],fd1,))
+    time.sleep(random.random() * 3)
+    p.apply_async(supermarket_crawler, args=(cities[quat:half],supermarkets,csvfile[1],fd2,))
+    time.sleep(random.random() * 3)
+    p.apply_async(supermarket_crawler, args=(cities[-half:-quat],supermarkets,csvfile[2],fd3,))
+    time.sleep(random.random() * 3)
+    p.apply_async(supermarket_crawler, args=(cities[-quat:],supermarkets,csvfile[3],fd4,))'''
+
+
+    p.apply_async(supermarket_crawler, args=(cities[0:quat],supermarkets,csvfile[0]))
+    time.sleep(random.random() * 3)
+    p.apply_async(supermarket_crawler, args=(cities[quat:half],supermarkets,csvfile[1]))
+    time.sleep(random.random() * 3)
+    p.apply_async(supermarket_crawler, args=(cities[-half:-quat],supermarkets,csvfile[2]))
+    time.sleep(random.random() * 3)
+    p.apply_async(supermarket_crawler, args=(cities[-quat:],supermarkets,csvfile[3]))
+
+    print('Waiting for all subprocesses done...')
+    p.close()
+    p.join()
+    print('All subprocesses done.')
+    fd1.close()
+    fd2.close()
+    fd3.close()
+    fd4.close()
+    print('All fd closed done.')
 
