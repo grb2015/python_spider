@@ -50,7 +50,7 @@ def current_time():
 def get_format_addr_from_lng_lat(lat,lng,ak):
     try:
         url2 = "http://api.map.baidu.com/geocoder/v2/?location=%s,%s&output=json&pois=1&ak=%s"%(lat ,lng,ak)
-        print('#### url2 = ',url2,file=log_file)
+        #print('#### url2 = ',url2,file=log_file)
         format_json = requests.get(url2).json() 
        # req2 = urllib.request.urlopen(url2)#JSON格式的返回数据
 
@@ -59,11 +59,11 @@ def get_format_addr_from_lng_lat(lat,lng,ak):
         #print('respan_python2 = ',respan_python2,file=log_file)
         #print('######　format_json_url2 = ',format_json,file=log_file)
         format_addr = format_json['result']['formatted_address']
-        print('### format_addr_url2 = ',format_addr,file=log_file)
+        #print('### format_addr_url2 = ',format_addr,file=log_file)
        
         return format_addr
     except Exception as crawl_error:
-        print("########### except 3 ######################",file=log_file)
+        print(current_time(),"########### except 3 ######################",file=log_file)
         print("########### except 3 ######################")
         pass
 
@@ -73,9 +73,11 @@ def get_format_addr_from_lng_lat(lat,lng,ak):
 def supermarket_crawler():
     """Supermarket Crawler
     """
-
     cities = ['上海', '南京', '无锡', '常州', '苏州', '南通', '盐城', '扬州', '镇江', '泰州', '杭州', '宁波', '嘉兴', '湖州', '绍兴', '金华', '舟山', '台州', '合肥', '芜湖', '马鞍山', '铜陵', '安庆', '滁州', '池州', '宣城']
-    supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
+    #supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
+    supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
+    #cities = ['上海', '南京', '无锡', '常州', '苏州', '南通', '盐城', '扬州', '镇江', '泰州', '杭州', '宁波', '嘉兴', '湖州', '绍兴', '金华', '舟山', '台州', '合肥', '芜湖', '马鞍山', '铜陵', '安庆', '滁州', '池州', '宣城']
+    #supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
     #cities = ['上海', '南京', '无锡', '常州', '苏州']
     #cities = ['上海']
     #supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
@@ -95,21 +97,21 @@ def supermarket_crawler():
                 url_total = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&output=json&ak={3}'.format(supermarket_name, city, page_size,ak)
                 try:
                     
-                    print('### url_total = ',url_total,file=log_file)
+                    #print('### url_total = ',url_total,file=log_file)
                     supermarket_json = requests.get(url_total).json()   ### 我感觉requests直接把json转为了python数据结构
                     supermarket_num =  supermarket_json['total']
                     #print('##### type  supermarket_json = ',type(supermarket_json,file=log_file))  ##＃这里直接得到dict 
-                    print('##### supermarket_json = ',supermarket_json,file=log_file)
-                    print('#### supermarket_total = ',supermarket_num,file=log_file)
+                    #print('##### supermarket_json = ',supermarket_json,file=log_file)
+                    #print('#### supermarket_total = ',supermarket_num,file=log_file)
 
                     page_total = supermarket_num // 20 + 1
-                    print('#### page_total = ',page_total,file=log_file)
+                    #print('#### page_total = ',page_total,file=log_file)
                     
                     for page_num in range(page_total):
                         url = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&page_num={3}&output=json&ak={4}'.format(supermarket_name, city, page_size, page_num,ak)
-                        print('### url = ',url,file=log_file)
+                        #print('### url = ',url,file=log_file)
                         supermarket_json = requests.get(url).json()
-                        print('##### supermarket_json2 = ',supermarket_json,file=log_file)
+                        #print('##### supermarket_json2 = ',supermarket_json,file=log_file)
 
                         rest_size = page_size  ##　还剩余多少记录，默认为20
                         if(page_num == page_total - 1):
@@ -117,12 +119,12 @@ def supermarket_crawler():
                         for supermarket_num in range(rest_size):
                             try:
                                 supermarket = supermarket_json['results'][supermarket_num]
-                                print(city, supermarket_name,file=log_file)
+                                #print(city, supermarket_name,file=log_file)
                                 #print(city, supermarket_name)
                                 #time.sleep(1) 
                                 time.sleep(0.3)
                                 format_addr = get_format_addr_from_lng_lat(supermarket['location']['lat'],supermarket['location']['lng'],ak)
-                                print("_________format add = ",format_addr,file=log_file)
+                                #print("_________format add = ",format_addr,file=log_file)
                                 ## windows换行需要\r\n  linux \n
                                 #write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address'])
                                 write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'],format_addr)
@@ -136,16 +138,16 @@ def supermarket_crawler():
                                 
                                 writer.writerow(list_write_buf)
                             except Exception as crawl_error:
-                                print("########### except 1 ######################",file=log_file)
-                                print("########### except 1 ######################")
+                                print(current_time(),"########### except 1 ######################",file=log_file)
+                                print(current_time(),"########### except 1 ######################")
                                 pass
 
                 except Exception as crawl_error:
-                    print("########### except 2 ######################",file=log_file)
-                    print("########### except 2 ######################")
+                    print(current_time(),"########### except 2 ######################",file=log_file)
+                    print(current_time(),"########### except 2 ######################")
                     pass
 
 if(__name__ == '__main__'):
-    log_file = open("./log.txt", 'a+') 
+    log_file = open("./sing_log.txt", 'w+') 
     supermarket_crawler()
 
