@@ -157,7 +157,7 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
 
         for city in cities:
             for supermarket_name in supermarkets:
-                #print(city, supermarket_name)
+                print(city, supermarket_name)
                 #time.sleep(0.2)  ### 必须加这个，不然我这里会发现supermarket_json = requests.get(url_total).json() 会exception modified in issue #2
                 url_total = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&output=json&ak={3}'.format(supermarket_name, city, page_size,ak)
                 #print('### url_total = ',url_total)
@@ -170,6 +170,7 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
                     print("########### except 2 ######################,supermarket_json = ",supermarket_json)
                     if(supermarket_json['status'] == 302): ### 如果{'status': 302, 'message': '天配额超} 则当天基本就不能访问了，可以终止进程，这里为pass进入下一次循环
                         print('cannot visit server today ! terminated process !')
+                       # quit()   这里可以终止当前进程，但是变成了僵尸进程
                         pass
                     else: ### 否则，可能只是服务器当前忙，再等待一下
                         time.sleep(0.5)
@@ -187,8 +188,8 @@ if(__name__ == '__main__'):
 if __name__=='__main__':
     #log_file = open("./log.txt", 'a+') 
     cities = ['上海', '南京', '无锡', '常州', '苏州', '南通', '盐城', '扬州', '镇江', '泰州', '杭州', '宁波', '嘉兴', '湖州', '绍兴', '金华', '舟山', '台州', '合肥', '芜湖', '马鞍山', '铜陵', '安庆', '滁州', '池州', '宣城']
-    #supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
-    supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
+    supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
+    #supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
     #cities = ['上海', '南京', '无锡', '常州', '苏州']
     half = len(cities)//2
     quat = len(cities)//4
@@ -256,8 +257,8 @@ if __name__=='__main__':
     p.close()
     p.join()
     print('All subprocesses done.')
-    fd1.close()
-    fd2.close()
-    fd3.close()
-    fd4.close()
+    #fd1.close()
+    #fd2.close()
+    #fd3.close()
+    #fd4.close()
     print('All fd closed done.')
