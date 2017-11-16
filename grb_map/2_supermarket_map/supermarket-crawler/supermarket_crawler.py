@@ -143,6 +143,7 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
     #supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
     # test_cities = ['上海', '南京']
     # test_supermarkets = ['苏果', '家乐福']
+    start_time = time.time()
     filename = '4_proc_mul_log'+str(index)+'.txt'
     print(filename)
     log_file = open(filename, 'w+')
@@ -159,7 +160,7 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
         for city in cities:
             for supermarket_name in supermarkets:
                 print(city, supermarket_name)
-                #time.sleep(0.2)  ### 必须加这个，不然我这里会发现supermarket_json = requests.get(url_total).json() 会exception modified in issue #2
+                time.sleep(0.2)  ### 必须加这个，不然我这里会发现supermarket_json = requests.get(url_total).json() 会exception modified in issue #2
                 url_total = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&output=json&ak={3}'.format(supermarket_name, city, page_size,ak)
                 #print('### url_total = ',url_total)
                 try:
@@ -169,7 +170,8 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
                 except Exception as crawl_error:
                     print(current_time(),"########### except 2 ######################,supermarket_json = ",supermarket_json,file=log_file)
                     print("########### except 2 ######################,supermarket_json = ",supermarket_json)
-                    if(supermarket_json['status'] == 302): ### 如果{'status': 302, 'message': '天配额超} 则当天基本就不能访问了，可以终止进程，这里为pass进入下一次循环
+                    ### fix issue-002 如果{'status': 302, 'message': '天配额超} 则当天基本就不能访问了，可以终止进程，这里为pass进入下一次循环 
+                    if(supermarket_json['status'] == 302): 
                         print('cannot visit server today ! terminated process !')
                        # quit()   这里可以终止当前进程，但是变成了僵尸进程
                         pass
@@ -177,7 +179,12 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
                         time.sleep(0.5)
                         get_data_and_write_to_csv(url_total)
 
+    
+    end_time = time.time()
+    print('\n\nTask  runs %0.2f seconds.' % (end_time - start_time),file=log_file)
+    print('\n\nTask  runs %0.2f seconds.' % (end_time - start_time) )
     log_file.close()  ## fix issue #1
+    
 '''
 if(__name__ == '__main__'):
     log_file = open("./log.txt", 'a+') 
