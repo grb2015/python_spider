@@ -65,24 +65,28 @@ def supermarket_crawler():
     #cities = ['上海', '南京', '无锡', '常州', '苏州']
     cities = ['上海']
     supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
+    #supermarkets = ['家乐福']
     # test_cities = ['上海', '南京']
     # test_supermarkets = ['苏果', '家乐福']
     page_size = 20
     ak = 'QPBpKbOkCqkkToYT5VaFixoz3hkykVBi' 
 
     # 要实现写入时编码为UTF-8，应使用codecs模块的open
-    with codecs.open('supermarkets.csv', 'w', encoding='utf-8') as market_file:
+    with codecs.open('shanghai_supermarkets.csv', 'w', encoding='utf-8') as market_file:
         writer = csv.writer(market_file)
-        writer.writerow(["商场名","经度","纬度","地址"])
+        writer.writerow(["超市品牌","商场名","经度","纬度","地址"])
 
         for city in cities:
             for supermarket_name in supermarkets:
-                time.sleep(1)  ### renbin.guo added 必须加这个，不然我这里会发现supermarket_json = requests.get(url_total).json() 会exception
+                time.sleep(0.3)  ### renbin.guo added 必须加这个，不然我这里会发现supermarket_json = requests.get(url_total).json() 会exception
                 url_total = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&output=json&ak={3}'.format(supermarket_name, city, page_size,ak)
                 try:
                     
                     print('### url_total = ',url_total)
-                    supermarket_json = requests.get(url_total).json()   ### 我感觉requests直接把json转为了python数据结构
+                    supermarket_json = requests.get(url_total)
+                    print('#### supermarket_json1 = ',supermarket_json)
+                    supermarket_json = supermarket_json.json()   ### 我感觉requests直接把json转为了python数据结构
+                    print('#### supermarket_json2 = ',supermarket_json)
                     supermarket_num =  supermarket_json['total']
                     #print('##### type  supermarket_json = ',type(supermarket_json))  ##＃这里直接得到dict 
                     print('##### supermarket_json = ',supermarket_json)
@@ -95,7 +99,7 @@ def supermarket_crawler():
                         url = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&page_num={3}&output=json&ak={4}'.format(supermarket_name, city, page_size, page_num,ak)
                         print('### url = ',url)
                         supermarket_json = requests.get(url).json()
-                        print('##### supermarket_json2 = ',supermarket_json)
+                        #print('##### supermarket_json2 = ',supermarket_json)
 
                         rest_size = page_size  ##　还剩余多少记录，默认为20
                         if(page_num == page_total - 1):
@@ -104,12 +108,12 @@ def supermarket_crawler():
                             try:
                                 supermarket = supermarket_json['results'][supermarket_num]
                                 print(city, supermarket_name)
-                                #time.sleep(1) 
+                                time.sleep(0.5) 
                                 format_addr = get_format_addr_from_lng_lat(supermarket['location']['lat'],supermarket['location']['lng'],ak)
                                 print("_________format add = ",format_addr)
                                 ## windows换行需要\r\n  linux \n
                                 #write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address'])
-                                write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'],format_addr)
+                                write_buf = '{0} {1} {2} {3} {4}'.format(supermarket_name,supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'],format_addr)
                                 #print('write_buf = ',write_buf)
                                 #print('type write_buf = ',type(write_buf))
                                 list_write_buf = write_buf.split(' ')
