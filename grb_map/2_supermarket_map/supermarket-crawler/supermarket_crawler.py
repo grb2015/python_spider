@@ -16,7 +16,8 @@ renbin.guo added:
         2.麦德龙(常熟商场店) 31.684721 120.789353 经济技术开发区通港路99号  这个就不知道是哪里了，需要对地址进行结构化 /省/市/区/路/号
         3.爬取各家超市官网，统计数据，与地图的数据做对比。  
         4.要获取多个城市的多家超市，当线程太慢，需要开多任务
-        5.需要解决请求过快，导致有的url请求得不到正确的回忆，即有丢失的问题
+        5.需要解决请求过快，导致有的url请求得不到正确的回忆，即有丢失的问题  issue 2  
+        6.解决调用quit() 后的僵尸进程
     history ；
         renbin.guo 2017-11-13 fix TODO1   use csv to write
         renbin.guo 2017-11-13 fix TODO2   格式化地址: 家乐福    31.241658   121.424219  白玉路101号 -->家乐福,31.241658,121.424219,上海市普陀区白玉路101号
@@ -76,12 +77,59 @@ def get_format_addr_from_lng_lat(lat,lng,ak):
        
         return format_addr
     except Exception as crawl_error:
-        print(current_time(),"########### except 3 ######################",file=log_file)
-        print("########### except 3 ######################")
+        print(current_time(),"########### except 3 ###################### ,format_json=",format_json,file=log_file)
+        print("########### except 3 ###################### format_json = ",format_json)
         pass
+def get_data_and_write_to_csv(url):
+    #print('### url_total222 = ',url_total)
+                    #print('### url_total = ',url_total,file=log_file)
+                    #print('### url_total= ',url_total)
+    supermarket_json = requests.get(url_total).json()   ### 我感觉requests直接把json转为了python数据结构
+                    #print(supermarket_json)
+    supermarket_num =  supermarket_json['total']
+                    #print('##### type  supermarket_json = ',type(supermarket_json,file=log_file))  ##＃这里直接得到dict 
+                    #print('##### supermarket_json = ',supermarket_json,file=log_file)
+                    #print('#### supermarket_total = ',supermarket_num,file=log_file)
+                    #print('#### supermarket_total = ',supermarket_num)
 
+    page_total = supermarket_num // 20 + 1
+                    #print('#### page_total = ',page_total,file=log_file)
+                   #print('#### page_total = ',page_total)
+    for page_num in range(page_total):
+        url = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&page_num={3}&output=json&ak={4}'.format(supermarket_name, city, page_size, page_num,ak)
+                        #print('### url = ',url,file=log_file)
+                        #print('### url-1 = ',url)
+        supermarket_json = requests.get(url).json()
+                        #print('##### supermarket_json2 = ',supermarket_json,file=log_file)
 
-
+        rest_size = page_size  ##　还剩余多少记录，默认为20
+        if(page_num == page_total - 1):
+            rest_size = supermarket_num - page_num * page_size  ## 如果是最后一页了，那么剩余的页数就不是20,而是小于20，要计算
+        for supermarket_num in range(rest_size):
+            try:
+                supermarket = supermarket_json['results'][supermarket_num]
+                                #print(city, supermarket_name,file=log_file)
+                                #print(city, supermarket_name)
+                                #time.sleep(1) 
+                time.sleep(0.3)
+                format_addr = get_format_addr_from_lng_lat(supermarket['location']['lat'],supermarket['location']['lng'],ak)
+                                #print("_________format add = ",format_addr,file=log_file)
+                                ## windows换行需要\r\n  linux \n
+                                #write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address'])
+                write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'],format_addr)
+                                #print('write_buf = ',write_buf,file=log_file)
+                                #print('type write_buf = ',type(write_buf,file=log_file))
+                list_write_buf = write_buf.split(' ')
+                print(current_time(),list_write_buf,file=log_file)  ### 加入时间
+                print(current_time(),list_write_buf)
+                                #print('list_write_buf = ',list_write_buf)
+                                #market_file.write('{0}   {1}   {2} {3}\r\n'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address']))
+                                
+                writer.writerow(list_write_buf)
+            except Exception as crawl_error:
+                print(current_time(),"########### except 1 ######################",file=log_file)
+                print("########### except 1 ######################")
+                pass
 
 def supermarket_crawler(cities,supermarkets,csvfilename,index):
 #def supermarket_crawler(cities,supermarkets,csvfilename):
@@ -95,6 +143,7 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
     #supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
     # test_cities = ['上海', '南京']
     # test_supermarkets = ['苏果', '家乐福']
+    start_time = time.time()
     filename = '4_proc_mul_log'+str(index)+'.txt'
     print(filename)
     log_file = open(filename, 'w+')
@@ -110,66 +159,32 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
 
         for city in cities:
             for supermarket_name in supermarkets:
-                #print(city, supermarket_name)
-                time.sleep(0.2)  ### renbin.guo added 必须加这个，不然我这里会发现supermarket_json = requests.get(url_total).json() 会exception
+                print(city, supermarket_name)
+                time.sleep(0.2)  ### 必须加这个，不然我这里会发现supermarket_json = requests.get(url_total).json() 会exception modified in issue #2
                 url_total = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&output=json&ak={3}'.format(supermarket_name, city, page_size,ak)
                 #print('### url_total = ',url_total)
                 try:
-                    #print('### url_total222 = ',url_total)
-                    #print('### url_total = ',url_total,file=log_file)
-                    #print('### url_total= ',url_total)
-                    supermarket_json = requests.get(url_total).json()   ### 我感觉requests直接把json转为了python数据结构
-                    #print(supermarket_json)
-                    supermarket_num =  supermarket_json['total']
-                    #print('##### type  supermarket_json = ',type(supermarket_json,file=log_file))  ##＃这里直接得到dict 
-                    #print('##### supermarket_json = ',supermarket_json,file=log_file)
-                    #print('#### supermarket_total = ',supermarket_num,file=log_file)
-                    #print('#### supermarket_total = ',supermarket_num)
-
-                    page_total = supermarket_num // 20 + 1
-                    #print('#### page_total = ',page_total,file=log_file)
-                   #print('#### page_total = ',page_total)
-                    for page_num in range(page_total):
-                        url = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&page_num={3}&output=json&ak={4}'.format(supermarket_name, city, page_size, page_num,ak)
-                        #print('### url = ',url,file=log_file)
-                        #print('### url-1 = ',url)
-                        supermarket_json = requests.get(url).json()
-                        #print('##### supermarket_json2 = ',supermarket_json,file=log_file)
-
-                        rest_size = page_size  ##　还剩余多少记录，默认为20
-                        if(page_num == page_total - 1):
-                            rest_size = supermarket_num - page_num * page_size  ## 如果是最后一页了，那么剩余的页数就不是20,而是小于20，要计算
-                        for supermarket_num in range(rest_size):
-                            try:
-                                supermarket = supermarket_json['results'][supermarket_num]
-                                #print(city, supermarket_name,file=log_file)
-                                #print(city, supermarket_name)
-                                #time.sleep(1) 
-                                time.sleep(0.3)
-                                format_addr = get_format_addr_from_lng_lat(supermarket['location']['lat'],supermarket['location']['lng'],ak)
-                                #print("_________format add = ",format_addr,file=log_file)
-                                ## windows换行需要\r\n  linux \n
-                                #write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address'])
-                                write_buf = '{0} {1} {2} {3}'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'],format_addr)
-                                #print('write_buf = ',write_buf,file=log_file)
-                                #print('type write_buf = ',type(write_buf,file=log_file))
-                                list_write_buf = write_buf.split(' ')
-                                print(current_time(),list_write_buf,file=log_file)  ### 加入时间
-                                print(current_time(),list_write_buf)
-                                #print('list_write_buf = ',list_write_buf)
-                                #market_file.write('{0}   {1}   {2} {3}\r\n'.format(supermarket['name'], supermarket['location']['lat'], supermarket['location']['lng'], supermarket['address']))
-                                
-                                writer.writerow(list_write_buf)
-                            except Exception as crawl_error:
-                                print(current_time(),"########### except 1 ######################",file=log_file)
-                                print("########### except 1 ######################")
-                                pass
+                    supermarket_json = requests.get(url_total).json() 
+                    get_data_and_write_to_csv(url_total)
 
                 except Exception as crawl_error:
-                    print(current_time(),"########### except 2 ######################",file=log_file)
-                    print("########### except 2 ######################")
-                    pass
+                    print(current_time(),"########### except 2 ######################,supermarket_json = ",supermarket_json,file=log_file)
+                    print("########### except 2 ######################,supermarket_json = ",supermarket_json)
+                    ### fix issue-002 如果{'status': 302, 'message': '天配额超} 则当天基本就不能访问了，可以终止进程，这里为pass进入下一次循环 
+                    if(supermarket_json['status'] == 302): 
+                        print('cannot visit server today ! terminated process !')
+                       # quit()   这里可以终止当前进程，但是变成了僵尸进程
+                        pass
+                    else: ### 否则，可能只是服务器当前忙，再等待一下
+                        time.sleep(0.5)
+                        get_data_and_write_to_csv(url_total)
+
+    
+    end_time = time.time()
+    print('\n\nTask  runs %0.2f seconds.' % (end_time - start_time),file=log_file)
+    print('\n\nTask  runs %0.2f seconds.' % (end_time - start_time) )
     log_file.close()  ## fix issue #1
+    
 '''
 if(__name__ == '__main__'):
     log_file = open("./log.txt", 'a+') 
@@ -181,8 +196,8 @@ if(__name__ == '__main__'):
 if __name__=='__main__':
     #log_file = open("./log.txt", 'a+') 
     cities = ['上海', '南京', '无锡', '常州', '苏州', '南通', '盐城', '扬州', '镇江', '泰州', '杭州', '宁波', '嘉兴', '湖州', '绍兴', '金华', '舟山', '台州', '合肥', '芜湖', '马鞍山', '铜陵', '安庆', '滁州', '池州', '宣城']
-    #supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
-    supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
+    supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
+    #supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
     #cities = ['上海', '南京', '无锡', '常州', '苏州']
     half = len(cities)//2
     quat = len(cities)//4
@@ -250,8 +265,8 @@ if __name__=='__main__':
     p.close()
     p.join()
     print('All subprocesses done.')
-    fd1.close()
-    fd2.close()
-    fd3.close()
-    fd4.close()
+    #fd1.close()
+    #fd2.close()
+    #fd3.close()
+    #fd4.close()
     print('All fd closed done.')
