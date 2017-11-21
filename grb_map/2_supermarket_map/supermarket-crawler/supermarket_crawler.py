@@ -169,7 +169,7 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
                     print(current_time(),"########### except 2 ######################",file=log_file)
                     print("########### except 2 ######################")
                     pass
-
+    log_file.close()  ## fix issue #1
 '''
 if(__name__ == '__main__'):
     log_file = open("./log.txt", 'a+') 
