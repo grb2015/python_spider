@@ -139,10 +139,8 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
     #cities = ['上海', '南京', '无锡', '常州', '苏州', '南通', '盐城', '扬州', '镇江', '泰州', '杭州', '宁波', '嘉兴', '湖州', '绍兴', '金华', '舟山', '台州', '合肥', '芜湖', '马鞍山', '铜陵', '安庆', '滁州', '池州', '宣城']
     #supermarkets = ['苏果', '家乐福', '世界联华', '沃尔玛', '欧尚', '大润发', '金润发', '卜蜂莲花', '华润万家', '永辉', '金鹰', '八佰伴', '华联', '好又多', '麦德龙']
     #cities = ['上海', '南京', '无锡', '常州', '苏州']
-    #cities = ['上海']
-    #supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
-    # test_cities = ['上海', '南京']
-    # test_supermarkets = ['苏果', '家乐福']
+    cities = ['上海']
+    supermarkets = ['家乐福','沃尔玛','大润发',  '麦德龙']
     start_time = time.time()
     filename = '4_proc_mul_log'+str(index)+'.txt'
     print(filename)
@@ -155,15 +153,17 @@ def supermarket_crawler(cities,supermarkets,csvfilename,index):
     with codecs.open(csvfilename, 'w+', encoding='utf-8') as market_file:
         #print('open  ...')
         writer = csv.writer(market_file)
-        writer.writerow(["商场名","经度","纬度","地址"])
+        writer.writerow(["超市品牌","商场名","经度","纬度","地址"])
 
         for city in cities:
             for supermarket_name in supermarkets:
                 print(city, supermarket_name)
                 time.sleep(0.2)  ### 必须加这个，不然我这里会发现supermarket_json = requests.get(url_total).json() 会exception modified in issue #2
+
                 url_total = 'http://api.map.baidu.com/place/v2/search?q={0}&region={1}&page_size={2}&output=json&ak={3}'.format(supermarket_name, city, page_size,ak)
                 #print('### url_total = ',url_total)
                 try:
+
                     supermarket_json = requests.get(url_total).json() 
                     get_data_and_write_to_csv(url_total)
 
