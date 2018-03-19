@@ -31,14 +31,14 @@ import time
 from bs4 import BeautifulSoup
 import json
 import time
+import os 
 
 ### 
-def get_goods_info_from_index_url():
+def get_goods_info_from_index_url(search_result_url):
 	header={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.3 Safari/537.36'}
-	### url是在天猫搜索"空调后"的结果页
-	url= 'https://list.tmall.com/search_product.htm?spm=a220m.1000858.1000721.1.693e14908tHauf&cat=50930001&q=%BF%D5%B5%F7&sort=s&style=g&search_condition=23&sarea_code=430600&from=sn_1_cat-qp&active=2&shopType=any#J_crumbs'    
+	### url是在天猫搜索"空调后"的结果页 
 
-	req = requests.get(url,headers=header)
+	req = requests.get(search_result_url,headers=header)
 	#print('respense.getcode(,file=log_file) = %s\n\n'%req.getcode())
 	html = req.content.decode('gbk')   ### 注意这里如果要自己编码，必须content，而不能req.text  ### content是二进制 
 	#print(html)	 ## winxp上cmd是gbk 若是winxp这里打印会出错，win10没问题
@@ -65,7 +65,7 @@ def get_goods_info_from_index_url():
 		goods_prices = []
 		for p_tag in p_price_tags:
 			prod_price  = p_tag.em.get_text()
-			print(prod_price)
+			#print(prod_price)
 			goods_prices.append(prod_price[1:])
 		info_list = []
 		for i in range(len(goods_urls)):
@@ -157,11 +157,10 @@ def get_current_price(detail_page_url):
 	driver.close()
 	return current_price
 	
-
-if __name__ == '__main__':
+def get_one_searched_result_page(result_url):
 	
 	### 获取空调类所有的商品详情页
-	goods_urls,goods_prices = get_goods_info_from_index_url()
+	goods_urls,goods_prices = get_goods_info_from_index_url(result_url)
 
 	### 获取每件商品的参数项目和对应的值，当前价格  [ [项目list],[值list] ] 
 	#  list_name_val[0] 为参数项目的列表
@@ -175,7 +174,7 @@ if __name__ == '__main__':
 	
 	list_name_val = get_tech_param_from_detail_url(goods_urls[0])
 	#print(list_name_val)
-	with codecs.open('all_goods_info.csv','w+',encoding = 'gbk') as market_file:
+	with codecs.open('all_goods_info.csv','a+',encoding = 'gbk') as market_file:
 		writer = csv.writer(market_file)
 
 		list_name_val[0].append('原价')
@@ -185,13 +184,69 @@ if __name__ == '__main__':
 		#list_name_val[1].append(cur_price)
 		#writer.writerow(list_name_val[1])
 		i = 0
+		
 		for goods_url in goods_urls:
 			
 			list_tech_param_name_and_val = get_tech_param_from_detail_url(goods_url)
 			list_tech_param_name_and_val[1].append(goods_prices[i])
+			print('i = ',i,file=log_file)
 			print('i = ',i)
-			print(list_tech_param_name_and_val[1],'\n\n')
+			print(list_tech_param_name_and_val[1],'\n\n',file=log_file)
 			i = i +1
 			writer.writerow(list_tech_param_name_and_val[1])	### 以后每个就只要写入值就可以了
+		writer.writerow([]) ### 每个结果页之间打一个空格
+
+## 获取搜索结果的下一页
+def get_next_result_page(cur_url):
+	header={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.3 Safari/537.36'}
+	### url是在天猫搜索"空调后"的结果页 
+
+	req = requests.get(cur_url,headers=header)
+	#print('respense.getcode(,file=log_file) = %s\n\n'%req.getcode())
+	html = req.content.decode('gbk')   ### 注意这里如果要自己编码，必须content，而不能req.text  ### content是二进制 
+	#print(html)	 ## winxp上cmd是gbk 若是winxp这里打印会出错，win10没问题
+	#with codecs.open('tmall.txt','w+',encoding = 'gbk') as f:
+	#	f.write(html)
+	soup = BeautifulSoup(html,'lxml')
 	
+
+	a_tag0 = soup.find_all('a','ui-page-next')[0]
+	try:
+		next_result_page_url = a_tag0.get('href')
+	except:
+		next_result_page_url = None  ### 达到末尾页了
+	return next_result_page_url
+
+
+if __name__ == '__main__':
+	filename = 'tmall_air_config_log.txt'
+	log_file = open(filename, 'w+')
+	os.remove('all_goods_info.csv')
+	cur_url = 'https://list.tmall.com/search_product.htm?spm=a220m.1000858.1000721.1.693e14908tHauf&cat=50930001&q=%BF%D5%B5%F7&sort=s&style=g&search_condition=23&sarea_code=430600&from=sn_1_cat-qp&active=2&shopType=any#J_crumbs' 
+	result_page = 0
+	next_result_page_url = cur_url
+	get_one_searched_result_page(cur_url)
+	while(1):
+		result_page = result_page +1
+		print(' result_page = ',result_page,file=log_file)
+		print(' result_page = ',result_page)
+
+		next_result_page_url = get_next_result_page(next_result_page_url) 
+		
+		next_result_page_url = 'https://list.tmall.com/search_product.htm'+ next_result_page_url
+		with open('next_page.txt','a+',encoding = 'gbk') as f:
+			f.write(next_result_page_url)
+
+		print("next_result_page_url = ",next_result_page_url,file=log_file)
+
+		if next_result_page_url == None:
+			print(' break ! ,result_page = ',result_page,file=log_file)
+			break;
+		else:
+			get_one_searched_result_page(next_result_page_url)
+			
+		
+			 
+
+
 
