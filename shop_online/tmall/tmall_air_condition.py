@@ -33,8 +33,15 @@ import json
 import time
 import os 
 
-### 
-def get_goods_info_from_index_url(search_result_url):
+'''
+breif:
+	提取天猫搜索结果页中的信息，比如
+	https://list.tmall.com/search_product.htm?spm=a220m.1000858.1000721.1.693e14908tHauf&cat=50930001&q=%BF%D5%B5%F7&sort=s&style=g&search_condition=23&sarea_code=430600&from=sn_1_cat-qp&active=2&shopType=any#J_crumbs
+	获取的信息包括
+		--每件商品的详情页
+		--每件商品的价格
+'''
+def get_goods_price_and_url_from_result_page(search_result_url):
 	header={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.3 Safari/537.36'}
 	### url是在天猫搜索"空调后"的结果页 
 
@@ -82,6 +89,13 @@ def get_goods_info_from_index_url(search_result_url):
 	return [goods_urls,goods_prices]
 
 
+'''
+brief:
+	从具体某件商品的详情页提取信息
+	比如：https://detail.tmall.com/item.htm?spm=a220m.1000858.1000725.1.11642fdeocN0xy&id=565078328396&skuId=3577121480194&areaId=430600&standard=1&user_id=3823124552&cat_id=50930001&is_b=1&rn=cff1b70b93a9067b781f25f71d686157
+	提取的信息为：
+			---商品的各种技术参数(技术参数名称和值)
+'''
 def get_tech_param_from_detail_url(detail_url):
 	header={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.3 Safari/537.36'}
 	
@@ -120,7 +134,7 @@ def get_tech_param_from_detail_url(detail_url):
 '''
 	brief : 获取详情页的准确价格(优惠价)
 			
-	note:	需要用到selenium,比较慢，如果对价格不是特别敏感，可获取原价 get_goods_info_from_index_url
+	note:	需要用到selenium,比较慢，如果对价格不是特别敏感，可获取原价 get_goods_price_and_url_from_result_page
 '''
 def get_current_price(detail_page_url):
 	options = webdriver.ChromeOptions()
@@ -156,11 +170,24 @@ def get_current_price(detail_page_url):
 			print('价格 = ',current_price)
 	driver.close()
 	return current_price
-	
-def get_one_searched_result_page(result_url):
+
+'''
+	breif:  获取一个结果页中所有商品的信息，包括
+		
+		--- 每件商品的技术参数 (通过get_tech_param_from_detail_url 获得)
+		--- 每件商品的价格 (通过get_goods_price_and_url_from_result_page统一获得)
+
+		它其实就是整合了get_tech_param_from_detail_url（获取技术参数）和get_goods_price_and_url_from_result_page(获取价格)
+
+	Infput: result_url 为结果页的url  如https://list.tmall.com/search_product.htm?spm=a220m.1000858.1000721.1.693e14908tHauf&cat=50930001&q=%BF%D5%B5%F7&sort=s&style=g&search_condition=23&sarea_code=430600&from=sn_1_cat-qp&active=2&shopType=any#J_crumbs
+	output: 把每件商品的所有信息都写入了 all_goods_info.csv (追加写)
+'''	
+#def get_one_searched_result_page(result_url):
+def get_all_info_from_a_result_page(result_url):
 	
 	### 获取空调类所有的商品详情页
-	goods_urls,goods_prices = get_goods_info_from_index_url(result_url)
+	#goods_urls,goods_prices = get_goods_info_from_index_url(result_url)
+	goods_urls,goods_prices = get_goods_price_and_url_from_result_page(result_url)
 
 	### 获取每件商品的参数项目和对应的值，当前价格  [ [项目list],[值list] ] 
 	#  list_name_val[0] 为参数项目的列表
@@ -225,7 +252,9 @@ if __name__ == '__main__':
 	cur_url = 'https://list.tmall.com/search_product.htm?spm=a220m.1000858.1000721.1.693e14908tHauf&cat=50930001&q=%BF%D5%B5%F7&sort=s&style=g&search_condition=23&sarea_code=430600&from=sn_1_cat-qp&active=2&shopType=any#J_crumbs' 
 	result_page = 0
 	next_result_page_url = cur_url
-	get_one_searched_result_page(cur_url)
+	get_all_info_from_a_result_page(cur_url)
+	### 纪录起始时间
+	start_time = time.time()
 	while(1):
 		result_page = result_page +1
 		print(' result_page = ',result_page,file=log_file)
@@ -243,7 +272,11 @@ if __name__ == '__main__':
 			print(' break ! ,result_page = ',result_page,file=log_file)
 			break;
 		else:
-			get_one_searched_result_page(next_result_page_url)
+			get_all_info_from_a_result_page(next_result_page_url)
+	##纪录结束时间
+	end_time = time.time()
+	### 记录花费的时间
+	print('\n\nTask  runs %0.2f seconds.' % (end_time - start_time),file=log_file)
 			
 		
 			 
