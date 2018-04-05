@@ -15,7 +15,7 @@
 
 
 
-**1.更换壁纸程序： 抓取微软必应首页漂亮图片作为桌面壁纸（https://cn.bing.com/）**
+**1.更换壁纸程序： 抓取微软必应首页漂亮图片作为桌面壁纸 https://cn.bing.com/**
 https://github.com/grb2015/python_spider/tree/master/grb_bing_desk_background
 可执行运行1_bing.exe设置壁纸
 
