@@ -24,3 +24,6 @@ https://github.com/grb2015/python_spider/tree/master/grb_map/2_supermarket_map/s
 https://github.com/grb2015/python_spider/tree/master/grb_map/3_hexun
 ![index](https://github.com/grb2015/python_spider/blob/master/grb_map/3_hexun/%E5%85%A8%E5%9B%BD/%E5%85%A8%E5%9B%BD.png)
 ![index](https://github.com/grb2015/python_spider/blob/master/grb_map/3_hexun/%E5%85%A8%E5%9B%BD/%E5%85%A8%E5%9B%BD_pie.png)
+
+**3.抓取微软必应首页图片自动设置为电脑壁纸**
+https://github.com/grb2015/python_spider/tree/master/grb_bing_desk_background
