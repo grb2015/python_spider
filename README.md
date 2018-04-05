@@ -11,9 +11,9 @@
 ---
 
 ## INTRODUCTION
-爬虫学习 包括个人原创和其他人的项目
+爬虫学习
 
-原创：
+
 **1.抓取全国大型超市分布信息**
 
 https://github.com/grb2015/python_spider/tree/master/grb_map/2_supermarket_map/supermarket-crawler
