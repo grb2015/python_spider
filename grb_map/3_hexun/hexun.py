@@ -3,6 +3,8 @@
 # @Date:   2017-12-17 20:00:55
 # @Last Modified by:   Teiei
 # @Last Modified time: 2017-12-19 22:39:03
+# @ history:
+#	博汇科技的url(http://stockdata.stock.hexun.com/688004.shtml)打开跟其他的不一样，导致程序出错。添加try except忽略
 
 import re
 import requests
@@ -11,16 +13,7 @@ from bs4 import BeautifulSoup
 import datetime
 import time
 import json 
-'''
-import json
-data = {
-'name' : 'ACME',
-'shares' : 100,
-'price' : 542.23
-}
-with open('6-1.json', 'w') as f: ## 创建6-1.json
-	json.dump(data, f)
-'''
+ 
 def get_one_commany_info(detail_url):
 	header={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.3 Safari/537.36'}
 	req = requests.get(detail_url,headers=header)
@@ -59,12 +52,12 @@ def get_one_commany_info(detail_url):
 	取得一个省的所有上市公司的详情页并存入detail_urls.json
 '''
 def  get_one_province_detail_urls_store_in_json(url):
-	header={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.3 Safari/537.36'}
+	header={'User-Agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'}
 	req = requests.get(url,headers=header)
 	html = req.text
 
 	
-	soup = BeautifulSoup(html)
+	soup = BeautifulSoup(html,'lxml')
 	option_tag_end = soup.find_all('option')[-1]  ###最后一个
 	total_page = option_tag_end.get_text()
 	print('total_page = ',total_page,file=log_file)  ### 共多少页
@@ -76,55 +69,62 @@ def  get_one_province_detail_urls_store_in_json(url):
 		req = requests.get(url1,headers=header)
 		html = req.text
 		#print(html,file=log_file)
-		soup = BeautifulSoup(html)
+		soup = BeautifulSoup(html,'lxml')
 		a_tags = soup.find_all('a','amal')
 		
 		for  a_tag in a_tags:
-			print(a_tag.get_text(),file=log_file)  ### 公司简称
-			print(a_tag.get_text()) 
+			# print(a_tag.get_text(),file=log_file)  ### 公司简称
+			# print(a_tag.get_text()) 
 			urls.append(a_tag.get('href'))
 			#print(urls,file=log_file)
 	print('#### final urls = ',urls,file=log_file)
 	len_urls = len(urls)
 	i = 0
 	
-	for url in urls:
+	for url in urls:  
 		#print('  for  url1  = ',url,file=log_file)
-		if i%2:
+		if i%2: # url连续两个是重复的
+		# if True:
 			#print('get_one_province_detail_urls_store_in_json... [%d/%d] '%(i,len_urls),file=log_file)
-			print('get_one_province_detail_urls_store_in_json... [%d/%d] '%(i,len_urls))
-			#print('  for  url  = ',url,file=log_file)
-			#print('  for  url  = ',url)
-			#time.sleep(0.3)
-			req = requests.get(url,headers=header)
-			html = req.text
-			#utf_8_html = html.encode('utf-8')
-			#with open('detail.html','wb+') as f:
-			#	f.write(utf_8_html)
-				
-			#print(html,file=log_file)
-			soup = BeautifulSoup(html,'lxml')
-			a_tag0 = soup.find_all('a',id='a_leftmenu_dt4_1')[0]  ### 公司资料网页
-			detail_url = a_tag0.get('href')
-			#print(detail_url,file=log_file)
-			detail_urls.append(detail_url)
+			try:
+				print('get_one_province_detail_urls_store_in_json... [%d/%d] '%(i,len_urls))
+				print('  ##################################### for  url  = ',url,file=log_file)
+				print('  for  url  = ',url)
+				# time.sleep(0.5)
+				req = requests.get(url,headers=header)
+				html = req.text
+				#utf_8_html = html.encode('utf-8')
+				#with open('detail.html','wb+') as f:
+				#	f.write(utf_8_html)
+					
+				# print(html,file=log_file)
+				soup = BeautifulSoup(html,'lxml')
+				a_tag0 = soup.find_all('a',id='a_leftmenu_dt4_1')[0]  ### 公司资料网页
+				detail_url = a_tag0.get('href')
+				#print(detail_url,file=log_file)
+				detail_urls.append(detail_url)
 
-			### 获取2017前3季度销售额和利润
-			info_list = []
-			a_tag0 = soup.find_all('div','cwdesc')[0]  ### class = cwdesc
-			profit_str = a_tag0.get_text()
-			re_result = re.match(r'.+?收入(.+?)万元.*?利润(.+?)万元', profit_str)
-			if re_result:
-				turnover = re_result.group(1)
-				profit = re_result.group(2)
-				info_list.append(turnover)
-				info_list.append(profit)
-			
-			a_tag0 = soup.find_all('a',id = 'navName')[0]  ### 获得当前的公司名称
-			name_and_code = a_tag0.get_text() 
-			info_list.append(name_and_code)
-			writer2.writerow(info_list)
-			print(info_list)
+				### 获取2017前3季度销售额和利润
+				info_list = []
+				a_tag0 = soup.find_all('div','cwdesc')[0]  ### class = cwdesc
+				profit_str = a_tag0.get_text()
+				re_result = re.match(r'.+?收入(.+?)万元.*?利润(.+?)万元', profit_str)
+				if re_result:
+					turnover = re_result.group(1)
+					profit = re_result.group(2)
+					info_list.append(turnover)
+					info_list.append(profit)
+				
+				a_tag0 = soup.find_all('a',id = 'navName')[0]  ### 获得当前的公司名称
+				name_and_code = a_tag0.get_text() 
+				info_list.append(name_and_code)
+				writer2.writerow(info_list)
+				print(info_list)
+				
+			except Exception  as e:
+				print("############################# 异常",file=log_file)
+				print(e,file=log_file)
+				pass
 
 		i = i+1
 	print('detail_urls = ',detail_urls,file=log_file)   #### 该省所有上市公司的详情页
@@ -166,7 +166,7 @@ def get_all_provices_index_urls():
 	req = requests.get(url,headers=header)
 	html = req.text
 
-	soup = BeautifulSoup(html)
+	soup = BeautifulSoup(html,'lxml')
 	a_tags = soup.find_all('a','amal')
 		
 	for  a_tag in a_tags:
