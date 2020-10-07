@@ -76,10 +76,12 @@ def format_addr(csvfile):
 	with codecs.open(csvfile,'r+',encoding='utf-8') as f:
 		lines = f.readlines()
 	addrs=[]
-	for line in lines[-19:-1]:
+	print("################ len(lines) = ",len(lines))
+	for line in lines:
 		line = line.strip()
 		list_line = line.split(',')
-		print(list_line)       
+		print(list_line)   
+		return     
 		ak = 'QPBpKbOkCqkkToYT5VaFixoz3hkykVBi' 
 		try:
 			addr = list_line[-3] #   办公地址
@@ -255,5 +257,5 @@ if __name__ == '__main__':
 	#	print(csvfiles[i])
 	#	print(market_names[i])
 	#	format_addr(csvfiles[i],market_names[i])
-	csvfile = "all_province_commanpy_info_all_country_formated_addr2.csv"
+	csvfile = "all_prince_commanpy_info.csv"
 	format_addr(csvfile)
