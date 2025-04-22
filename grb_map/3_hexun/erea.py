@@ -87,7 +87,8 @@ def get_division_info(code):
     if district_name:
         result.append(district_name)
     
-    return "，".join(result) if result else "未找到对应的行政区域"
+    return  result
+    # return "，".join(result) if result else "未找到对应的行政区域"
 
 # 使用示例
 if __name__ == "__main__":
@@ -97,6 +98,7 @@ if __name__ == "__main__":
     # 测试查询
     print(get_division_info(310101))  # 上海市，市辖区，黄浦区
     print(get_division_info(510104))  # 上海市，市辖区，黄浦区
+    print(type(get_division_info(510104)))  # 上海市，市辖区，黄浦区
     # print(get_division_info(divisions_data, 110105))  # 北京市，朝阳区
     # print(get_division_info(divisions_data, 4403))    # 广东省，深圳市
     # print(get_division_info(divisions_data, 50))      # 重庆市
