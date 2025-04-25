@@ -6,6 +6,11 @@
 # @ history:
 #	博汇科技的url(http://stockdata.stock.hexun.com/688004.shtml)打开跟其他的不一样，导致程序出错。添加try except忽略
 
+#	20250415 added
+#	和讯网更新，之前的省份数据打不开了。http://datainfo.stock.hexun.com/hybk/dy.aspx
+#   这里也打不开了，all_provices.json
+#	需要重新用一种方法从这里获取数据：https://stockdata.hexun.com/gszl/jbgk.aspx
+
 import re
 import requests
 import urllib,codecs,csv
@@ -22,6 +27,8 @@ import json
 #
 ################################################################################
 def gethtml(url):
+	print("url = ")
+	print(url)
 	reqheader = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'}
 	i = 0
 	while i < 10:
@@ -185,9 +192,11 @@ def get_all_commany_info_from_json_urls():
 	获取所有省份(31个)的入口地址
 '''
 def get_all_provices_index_urls():
-	url  = 'http://datainfo.stock.hexun.com/hybk/dy.aspx'
+	url  = 'https://stockdata.hexun.com/gszl/data/jsondata/jbgk.ashx?count=20&titType=null&page=1&callback=hxbase_json15'
 	all_provices = []
 	req = gethtml(url)
+	print("Req = ")
+	print(req)
 	if req:
 		html = req.text
 
@@ -218,7 +227,8 @@ if __name__ == '__main__':
 
 
 	all_provices = get_all_provices_index_urls()
-
+	print("all_provinces = ")
+	print(all_provices)
 	#get_one_province_detail_urls_store_in_json(all_provices[7])
 	#get_all_commany_info_from_json_urls()
 	#print('---------------------------------------------------',file=log_file)

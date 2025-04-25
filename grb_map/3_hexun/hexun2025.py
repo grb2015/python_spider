@@ -28,6 +28,48 @@
 # 深交所: https://www.szse.cn/market/product/stock/list/index.html
 # 北交所：待完善https://www.bse.cn/nq/listedcompany.html
 
+#          行政编码
+# 生益科技	441900
+# 酒钢宏兴	620200
+# 中炬高新	442000
+# 中国海油	052001
+# 中国移动	052001
+# 明阳智能	442000
+# 华立股份	441900
+# 依顿电子	442000
+# 安达智能	441900
+# 利扬芯片	441900
+# 生益电子	441900
+# 开普云	441900
+# 百济神州	013002
+# 赛微微电	441900
+# 博力威	441900
+# 华虹公司	052001
+
+# 安达智能	441900
+# 利扬芯片	441900
+# 生益电子	441900
+# 开普云	441900
+# 百济神州	013002
+# 赛微微电	441900
+# 博力威	441900
+# 华虹公司	052001
+# 华润微	013002
+# 诺诚健华	013002
+# 精智达	440309
+# 优利德	441900
+# 鼎通科技	441900
+# 奥普特	441900
+# 格科微	013002
+# 中芯国际	013002
+# 九号公司	013002
+# 激智科技	
+
+
+
+# 以上公司都是无法通过接口行政编码获取到格式化地址
+
+
 import re
 import requests
 import urllib,codecs,csv
@@ -68,211 +110,168 @@ def get_stock_value_by_code(stock_code):
 	# print(df)
 	return df
 
+#################################################################################################
+#	breif	: 根据股票代码识别出类别(辅助函数)
+#
+#
+#################################################################################################
+
+def assign_category(code):
+    if code.startswith(("00")):
+        return "深A股"
+    elif code.startswith("30"):
+        return "深创业板"
+    else:
+        return "其他板块"  # 预留扩展
 
 
-'''
-	breif :	读取股票名单，然后根据股票代码在akshare查其它数据后返回为一个df
-	params:	
-		share_type 类别 （"沪A股,"沪科创板")
-'''
+##############################################################################################################
+	# breif :	获取单个公司的信息
+	# params:	str 	stock_code 股票代码str
+##############################################################################################################
 
-def Struct_df_SH(columns,share_type,sourcefile):
-	df_SH = pd.DataFrame(columns=columns)
-	df_SH_source = pd.read_excel(sourcefile)   # 读取上交所的excel
-	df_SH_source = pd.read_excel('bourse_SH_tech.xls')   # 读取上交所的excel
-	print("df_SH:")
-	print(df_SH)
-	df_SH["类别"] = "沪A股"
-	print(" type df_SH")
-	print(type(df_SH))
-	print(" type(df_SH[\"类别\"] ")
-	print(type(df_SH["类别"] ))
-	print(df_SH)
-	df_SH["股票代码"] = df_SH_source["A股代码"]
-	df_SH["公司简称"] = df_SH_source["证券简称"]
-	df_SH["类别"] = share_type
-	# print( df_SH_source["上市日期"] )
-	# print( type(df_SH_source["上市日期"]) )
-	df_SH["上市日期"] =  pd.to_datetime(df_SH_source["上市日期"].astype(str), format='%Y%m%d')
-	print(df_SH)
-	# print(df_SH_source.index.size)
+def get_single_info(stock_code):
+	info = {}
+	flag = False
+	count = 0 
+	while flag == False and count<5:
+		try:
+			df_single_company_info = get_stock_info_by_code(stock_code)
 
-	
+			df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "provincial_name" ]# # 注意这里的列名只有item和value,所以要这样寻找
+			provincial_name = df_tmp['value'].iloc[0]
+
+			df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "district_encode" ]
+			district_encode = df_tmp['value'].iloc[0]
+
+			df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "org_name_cn" ] 
+			org_name_cn = df_tmp['value'].iloc[0]
+
+			df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "affiliate_industry" ] 
+			affiliate_industry = df_tmp['value'].iloc[0]["ind_name"]
+
+			df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "reg_address_cn" ] 
+			reg_address_cn = df_tmp['value'].iloc[0]
+
+			df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "office_address_cn" ] 
+			office_address_cn = df_tmp['value'].iloc[0]
+
+			df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "org_website" ] 
+			org_website =  df_tmp['value'].iloc[0]  
+
+			df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "established_date" ]    #  成立日期（时间戳）
+			int_timestamp = df_tmp['value'].iloc[0]
+			established_date = pd.to_datetime(int_timestamp, unit="ms").strftime("%Y-%m-%d") # 时间戳转为1999-01-01格式
+
+			df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "staff_num" ] 
+			staff_num = df_tmp['value'].iloc[0]
+
+
+			# http接口获取市值
+			df_stock_value_info = get_stock_value_by_code(str(stock_code))
+			df_tmp = df_stock_value_info [ df_stock_value_info["item"] ==  "总市值" ] 
+			market_value = df_tmp['value'].iloc[0]
+			time.sleep(0.5)
+			print("time sleep 0.5...")
+			# http接口，通过行政编码获取省市区的格式化数据。
+			eara_list = erea.get_division_info(district_encode)
+
+			
+			info['总市值(亿)'] = round(market_value/100000000,2)
+			info['行政区划'] = district_encode
+			info['公司全名'] = org_name_cn
+			info['行业'] = affiliate_industry
+			info['注册地'] = reg_address_cn
+			info['办公地'] = office_address_cn
+			info['官网'] = org_website
+			info['成立日期'] = established_date
+			info['员工人数'] = staff_num
+			if len(eara_list) == 3 :
+				info['省'] = eara_list[0]  
+				info['市'] = eara_list[1]  
+				info['县'] = eara_list[2]  
+			elif len(eara_list) == 2 :  #东莞等比较特殊，市下面直接是镇
+				info['省'] = eara_list[0]  
+				info['市'] = eara_list[1] 
+				info['县'] = " "
+			elif len(eara_list) == 1 :  #东莞等比较特殊，市下面直接是镇
+				info['省'] = eara_list[0]  
+				info['市'] = " "
+				info['县'] = " "
+			else:
+				info['省'] = " "
+				info['市'] = " "
+				info['县'] = " "
+			print("single_info  = ")
+			print(info)
+			flag = True
+		except Exception as e:
+			print("### exception get_single_info ")
+			print(e)
+			print(e,file=log_file)
+			time.sleep(5)
+			print("再次尝试...")
+			flag = False
+			count = count + 1
+			print("正在尝试第"+count+"次")
+			pass
+	return info
+
+##############################################################################################################
+	# breif :	读取股票名单，然后根据股票代码在akshare查其它数据后返回为一个df
+	# params:	
+##############################################################################################################
+
+def Struct_df(columns,sourcefile):
+	df = pd.DataFrame(columns=columns)
+	# df = pd.DataFrame(columns=columns).astype('string')
+	df_source = pd.read_excel(sourcefile)    
+	if df_source.index.size < 1:
+		return df 
+
+	if sourcefile == 'bourse_SH.xls' or sourcefile == 'bourse_SH_tech.xls' :
+		df["股票代码"] = df_source["A股代码"]
+		df["公司简称"] = df_source["证券简称"]
+		df["上市日期"] =  pd.to_datetime(df_source["上市日期"].astype(str), format='%Y%m%d')
+		if  sourcefile == 'bourse_SH.xls':
+			df["类别"] = "沪A股"
+		else:
+			df["类别"] = "沪科创板"
+	elif sourcefile == 'bourse_SZ.xlsx': 
+		df["股票代码"] = df_source["A股代码"].astype(str).str.zfill(6)  ## 000001会被识别为1，excel表也改不了。这里将1改为000001
+		df["公司简称"] = df_source["A股简称"]
+		df["上市日期"] = df_source["A股上市日期"]
+		df["类别"] = df["股票代码"].apply(assign_category)
+
 
 
 	# for in in range(df.index.size):
-	for i in range(2):
-	# for i in range(df_SH_source.index.size):
-		stock_code = str( df_SH['股票代码'][i] )
-		df_row = df_SH.loc[i]	#获取第i行
+	# for i in range(2):
+	for i in range(df_source.index.size):
+		try:
+			single_info = get_single_info(str( df['股票代码'][i] ))
+			if single_info :
+				df.loc[i,"总市值(亿)"] = single_info['总市值(亿)']
+				df.loc[i,"行政区划"] = single_info['行政区划']
+				df.loc[i,"公司全名"] = single_info['公司全名']
+				df.loc[i,"行业"] =  single_info['行业']
+				df.loc[i,"注册地"] =  single_info['注册地']
+				df.loc[i,"办公地"] =  single_info['办公地']
+				df.loc[i,"官网"] =  single_info['官网']
+				df.loc[i,"成立日期"] =  single_info['成立日期']
+				df.loc[i,"员工人数"] =  single_info['员工人数']
+				df.loc[i,"省"] = single_info['省']
+				df.loc[i,"市"] = single_info['市']
+				df.loc[i,"县"] = single_info['县']
 
-		df_single_company_info = get_stock_info_by_code(str(stock_code))
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "provincial_name" ]# # 注意这里的列名只有item和value,所以要这样寻找
-		provincial_name = df_tmp['value'].iloc[0]
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "district_encode" ]
-		district_encode = df_tmp['value'].iloc[0]
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "org_name_cn" ] 
-		org_name_cn = df_tmp['value'].iloc[0]
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "affiliate_industry" ] 
-		affiliate_industry = df_tmp['value'].iloc[0]["ind_name"]
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "reg_address_cn" ] 
-		reg_address_cn = df_tmp['value'].iloc[0]
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "office_address_cn" ] 
-		office_address_cn = df_tmp['value'].iloc[0]
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "org_website" ] 
-		org_website =  df_tmp['value'].iloc[0]  
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "established_date" ]    #  成立日期（时间戳）
-		int_timestamp = df_tmp['value'].iloc[0]
-		established_date = pd.to_datetime(int_timestamp, unit="ms").strftime("%Y-%m-%d") # 时间戳转为1999-01-01格式
-		print(" established_date = ")
-		print( established_date  )
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "staff_num" ] 
-		staff_num = df_tmp['value'].iloc[0]
-
-
-		# df_row["省"] = provincial_name  
-		df_row["行政区划"] = district_encode
-		df_row["公司全名"] = org_name_cn
-		df_row["行业"] =  affiliate_industry
-		df_row["注册地"] =  reg_address_cn
-		df_row["办公地"] =  office_address_cn
-		df_row["官网"] =  org_website
-		df_row["成立日期"] =  established_date
-		df_row["员工人数"] =  staff_num
-
-		# http接口获取市值
-		df_stock_value_info = get_stock_value_by_code(str(stock_code))
-		df_tmp = df_stock_value_info [ df_stock_value_info["item"] ==  "总市值" ] 
-		market_value = df_tmp['value'].iloc[0]
-		df_row["总市值(亿)"] = round(market_value/100000000,2) # 保留两位小数
-
-		# http接口，通过行政编码获取省市区的格式化数据。
-		eara_list = erea.get_division_info(df_row["行政区划"])
-		df_row["省"] = eara_list[0]  
-		df_row["市"] = eara_list[1]  
-		df_row["县"] = eara_list[2]  
-
-		# print(eara_list)
-
-		df_SH.loc[i] = df_row
-		print(df_SH)
-		time.sleep(0.5)
-	return df_SH
-
-
-
-'''
-	breif :	读取深交所的A股和创业板名单，然后根据股票代码在akshare查其它数据后返回为一个df
-'''
-
-def Struct_df_SZ(columns):
-	df_SZ = pd.DataFrame(columns=columns)
-	df_SZ_source = pd.read_excel('bourse_SZ.xlsx')   # 读取深交所的excel  股票代码000001读取出来为1了
-	print("df_SZ_source")
-	print(df_SZ_source)
-	print("df_SZ_source  A股代码")
-	print(df_SZ_source[["A股代码","A股简称"]])
-	
-	df_SZ["股票代码"] = df_SZ_source["A股代码"].astype(str).str.zfill(6)  ## 000001会被识别为1，excel表也改不了。这里将1改为000001
-	df_SZ["公司简称"] = df_SZ_source["A股简称"]
-	df_SZ["上市日期"] = df_SZ_source["A股上市日期"]
-	# print("日期：")
-	# print(df_SZ["上市日期"] )
-	# return  df_SZ
-	df_SZ["公司全名"] = df_SZ_source["公司全称"]
-	# df_SZ["行业"] = df_SZ_source["所属行业"]
-	# df_SZ["省"] = df_SZ_source["省    份"]
-	# df_SZ["市"] = df_SZ_source["城     市"]
-	df_SZ["官网"] = df_SZ_source["公司网址"]
-	df_SZ["注册地"] = df_SZ_source["注册地址"]
-	
-	
-	print(df_SZ)
-
-	# for in in range(df.index.size):
-	for i in range(2):
-	# for i in range(df_SZ_source.index.size):
-		stock_code = str( df_SZ['股票代码'][i] )
-		df_row = df_SZ.loc[i]	#获取第i行
-
-		print("__________________获取接口数据1 begin ___________________________________________")
-		print(stock_code)
-		df_single_company_info = get_stock_info_by_code(str(stock_code))
-		print(df_single_company_info,file=log_file)
-		print(df_single_company_info)
-		print("__________________获取接口数据1 end ___________________________________________")
-
-
-		# df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "provincial_name" ]# # 注意这里的列名只有item和value,所以要这样寻找
-		# provincial_name = df_tmp['value'].iloc[0]
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "district_encode" ]
-		district_encode = df_tmp['value'].iloc[0]
-
-		# df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "org_name_cn" ] 
-		# org_name_cn = df_tmp['value'].iloc[0]
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "affiliate_industry" ] 
-		affiliate_industry = df_tmp['value'].iloc[0]["ind_name"]
-
-		# df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "reg_address_cn" ] 
-		# reg_address_cn = df_tmp['value'].iloc[0]
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "office_address_cn" ] 
-		office_address_cn = df_tmp['value'].iloc[0]
-
-		# df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "org_website" ] 
-		# org_website =  df_tmp['value'].iloc[0]  
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "established_date" ]    #  成立日期（时间戳）
-		int_timestamp = df_tmp['value'].iloc[0]
-		established_date = pd.to_datetime(int_timestamp, unit="ms").strftime("%Y-%m-%d") # 时间戳转为1999-01-01格式
-
-		df_tmp = df_single_company_info [ df_single_company_info["item"] ==  "staff_num" ] 
-		staff_num = df_tmp['value'].iloc[0]
-
-
-		# df_row["省"] = provincial_name  
-		df_row["行政区划"] = district_encode
-		# df_row["公司全名"] = org_name_cn
-		df_row["行业"] =  affiliate_industry
-		# df_row["注册地"] =  reg_address_cn
-		df_row["办公地"] =  office_address_cn
-		# df_row["官网"] =  org_website
-		df_row["成立日期"] =  established_date
-		df_row["员工人数"] =  staff_num
-		print("类别 = ")
-		print(stock_code[0:2])
-		if stock_code[0:2] =="30" :
-			df_row["类别"] = "深A股"
-		elif stock_code[0:2] =="00":
-			df_row["类别"] = "深创业板"
-
-
-		df_stock_value_info = get_stock_value_by_code(str(stock_code))
-		df_tmp = df_stock_value_info [ df_stock_value_info["item"] ==  "总市值" ] 
-		market_value = df_tmp['value'].iloc[0]
-		df_row["总市值(亿)"] = round(market_value/100000000,2) # 保留两位小数
-
-
-		# http接口，通过行政编码获取省市区的格式化数据。
-		eara_list = erea.get_division_info(df_row["行政区划"])
-		df_row["省"] = eara_list[0]  
-		df_row["市"] = eara_list[1]  
-		df_row["县"] = eara_list[2]  
+		except Exception as e:
+			print("### exception  Struct_df")
+			print(e)
+			print(e,file=log_file)
+			pass
+	return df	
 		
-		df_SZ.loc[i] = df_row
-		print(df_SZ)
-		time.sleep(0.5)
-	return df_SZ
+	
 
 
 
@@ -285,36 +284,45 @@ if __name__ == '__main__':
 	target_file_name = "all_province_commanpy_info_all_country_formated_addr.csv"
 	columns = ["类别","省","市","县","公司简称","行政区划","公司全名","行业","员工人数","总市值(亿)","股票代码","注册地","办公地","官网","成立日期","上市日期"]
 
-	print("######")
-	# 	沪主板A股
-	df_sh = Struct_df_SH(columns,"沪A股",'bourse_SH.xls')
-	print(df_sh)
-	print(df_sh,file=log_file)
+	# # 	沪主板A股
+	df1 = Struct_df(columns,'bourse_SH.xls')
+	print("######  df1"  )
+	print(df1)
+	print(df1,file=log_file)
+	print("df1.index.size = " )
+	print(df1.index.size )
+	if df1.index.size >0 :
+		df1.to_csv(target_file_name, index=False, encoding="utf_8_sig")
 
-	df_sh.to_csv(target_file_name, index=False, encoding="utf_8_sig")
-
-	
-	# 沪科创板
-	df_sh_tech= Struct_df_SH(columns,"沪科创板",'bourse_SH_tech.xls')
-	df_sh_tech.to_csv(target_file_name,mode="a" ,header=False, index=False, encoding="utf_8_sig") # 追加,header=False避免重复写入列名
+	print("time sleep 1 ...")
+	# # 沪科创板
+	df2= Struct_df(columns,'bourse_SH_tech.xls')
+	if df2.index.size >0 :
+		df2.to_csv(target_file_name,mode="a" ,header=False, index=False, encoding="utf_8_sig") # 追加,header=False避免重复写入列名
+	print("###### df2"  )
+	print("df2.index.size = " )
+	print(df2.index.size )
+	print(df2)
+	print(df2,file=log_file)
+	print("time sleep 1 ...")
 
 
 	# 深主板A股 & 深创业板
-	df_sz = Struct_df_SZ(columns)
-	df_sz.to_csv(target_file_name,mode="a" ,header=False, index=False, encoding="utf_8_sig") # 追加,header=False避免重复写入列名
-	print("----------------------")
-	print("----------------------",file=log_file)
-	print(df_sz)
-	print(df_sz,file=log_file)
-
+	df3= Struct_df(columns,'bourse_SZ.xlsx')
+	print("df3.index.size = " )
+	print(df3.index.size )
+	if df3.index.size >0 :
+		df3.to_csv(target_file_name,mode="a" ,header=False, index=False, encoding="utf_8_sig") # 追加,header=False避免重复写入列名
+	print("###### df3"  )
+	print(df3)
+	print(df3,file=log_file)
 
 	
 
 	
 
 
-	# df_merged = pd.concat([df_sh, df_sz], ignore_index=True) # 设置 ignore_index=True 以重新索引
-	# df_merged.to_csv("all_province_commanpy_info_all_country_formated_addr.csv", index=False, encoding="utf_8_sig")
+	
 
 
 
