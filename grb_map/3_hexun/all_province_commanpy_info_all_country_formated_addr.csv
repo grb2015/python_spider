@@ -1,4 +1,4 @@
-﻿类别,province,city,conunty,jianchen,行政区划,quanmin,hangye,yiyee,lirun,员工人数,总市值(亿),guPiaoDaiMa,zhucedi,bangongdi,guanwan,成立日期,shangshiriqi
+﻿type,province,city,conunty,jianchen,erea_code,quanmin,hangye,yiyee,lirun,staff_num,market_value,guPiaoDaiMa,zhucedi,bangongdi,guanwan,setup_date,shangshiriqi
 沪A股,上海市,市辖区,黄浦区,浦发银行,310101,上海浦东发展银行股份有限公司,银行,,,62987,3117.2,600000,上海市黄浦区中山东一路12号,上海市黄浦区中山东一路12号,www.spdb.com.cn,10/18/1992,11/10/1999
 沪A股,广东省,广州市,白云区,白云机场,440111,广州白云国际机场股份有限公司,机场航运,,,9878,208.98,600004,广东省广州市白云区白云国际机场南工作区自编一号,广东省广州市白云区白云国际机场东南工作区空港南横四路综合服务大楼一区,www.baiyunport.com,9/18/2000,4/28/2003
 沪A股,湖北省,襄阳市,襄州区,东风股份,420607,东风汽车股份有限公司,汽车整车,,,4365,141,600006,湖北省襄阳市襄州区高新区东风汽车大道劲风路3幢,湖北省武汉市汉阳区经济技术开发区创业路58号,www.dfac.com,7/20/1999,7/27/1999

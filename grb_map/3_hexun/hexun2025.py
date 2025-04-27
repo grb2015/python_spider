@@ -282,7 +282,7 @@ if __name__ == '__main__':
 	log_file = codecs.open("./china_rt_log.txt", 'w+',encoding ='utf-8') 
 	# 保存为 CSV 文件（防止中文乱码，兼容 Excel）
 	target_file_name = "all_province_commanpy_info_all_country_formated_addr.csv"
-	columns = ["类别","省","市","县","公司简称","行政区划","公司全名","行业","员工人数","总市值(亿)","股票代码","注册地","办公地","官网","成立日期","上市日期"]
+	columns = ["类别","省","市","县","公司简称","行政区划","公司全名","行业","员工人数","总市值(亿)","股票代码","注册地","办公地","官网","成立日期","上市日期"]  # Todo 列名最好用英文，不然top-hr前后端使用的时候，无法识别
 
 	# # 	沪主板A股
 	df1 = Struct_df(columns,'bourse_SH.xls')
